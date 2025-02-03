@@ -2,6 +2,8 @@ const express = require("express");
 const auth = require('./middleware/auth');
 const multer = require('./middleware/multer-config');
 const Book = require("./models/Book");
+const fs = require('fs');
+const path = require('path');
 
 const router = express.Router();
 
@@ -39,5 +41,32 @@ router.post("/", auth, multer, async (req, res, next) => {
         .catch(error => { res.status(400).json( { error })})
 });
 
+/*
+ * Modification d'un livre
+ */
+router.put("/:id", auth, multer, async (req, res, next) => {
+    const bookObject = req.file ? {
+        ...JSON.parse(req.body.book),
+        imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
+    } : { ...req.body };
+    
+    delete bookObject._userId;
+    Book.findOne({_id: req.params.id})
+        .then((book) => {
+            if (book.userId != req.auth.userId) {
+                res.status(401).json({ message : 'Not authorized'});
+            } else {
+                const filename = book.imageUrl.split('/images/')[1];
+                fs.unlink(`${path.resolve(__dirname, 'images')}/${filename}`, () => {
+                    Book.updateOne({ _id: req.params.id}, { ...bookObject, _id: req.params.id})
+                        .then(() => res.status(200).json({message : 'Livre modifié!'}))
+                        .catch(error => res.status(401).json({ error }));
+                });
+            }
+        })
+        .catch((error) => {
+            res.status(400).json({ error });
+        });
+});
 
 module.exports = router;

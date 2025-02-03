@@ -15,7 +15,16 @@ router.get("/", async (req, res, next) => {
 });
 
 /*
- * Ajoute un livre
+ * Récupere un livre via son ID
+ */
+router.get("/:id", async (req, res, next) => {
+    Book.findOne({_id: req.params.id})
+        .then(book => res.status(200).json(book))
+        .catch(error => res.status(400).json({ error }));
+});
+
+/*
+ * Ajout d'un livre
  */
 router.post("/", auth, multer, async (req, res, next) => {
     const book = JSON.parse(req.body.book);
@@ -26,8 +35,8 @@ router.post("/", auth, multer, async (req, res, next) => {
     });
     
     newBook.save()
-    .then(() => { res.status(201).json({message: 'Livre enregistré !'})})
-    .catch(error => { res.status(400).json( { error })})
+        .then(() => { res.status(201).json({message: 'Livre enregistré !'})})
+        .catch(error => { res.status(400).json( { error })})
 });
 
 

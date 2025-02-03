@@ -30,7 +30,6 @@ router.get("/:id", async (req, res, next) => {
  */
 router.post("/", auth, multer, async (req, res, next) => {
     const book = JSON.parse(req.body.book);
-    console.log('book', book, 'image', req.file)
     const newBook = new Book({
         ...book,
         imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
@@ -66,7 +65,31 @@ router.put("/:id", auth, multer, async (req, res, next) => {
         })
         .catch((error) => {
             res.status(400).json({ error });
-        });
+        }
+    );
+});
+
+/*
+ * Suppression d'un livre
+ */
+router.delete("/:id", auth, multer, async (req, res, next) => {
+    Book.findOne({_id: req.params.id})
+        .then((book) => {
+            if (book.userId != req.auth.userId) {
+                res.status(401).json({ message : 'Not authorized'});
+            } else {
+                const filename = book.imageUrl.split('/images/')[1];
+                fs.unlink(`${path.resolve(__dirname, 'images')}/${filename}`, () => {
+                    Book.deleteOne({ _id: req.params.id})
+                        .then(() => res.status(200).json({message : 'Livre supprimé!'}))
+                        .catch(error => res.status(401).json({ error }));
+                });
+            }
+        })
+        .catch((error) => {
+            res.status(400).json({ error });
+        }
+    );
 });
 
 module.exports = router;

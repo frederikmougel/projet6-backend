@@ -92,4 +92,39 @@ router.delete("/:id", auth, multer, async (req, res, next) => {
     );
 });
 
+/**
+ * Notation d'un livre
+ */
+router.post("/:id/rating", auth, async (req, res) => {
+    try {
+        const { userId, rating } = req.body;
+        
+        if (rating < 0 || rating > 5) {
+            return res.status(400).json({ message: "La note doit être comprise entre 0 et 5." });
+        }
+
+        const book = await Book.findById(req.params.id);
+        if (!book) {
+            return res.status(404).json({ message: "Livre non trouvé." });
+        }
+
+        const existingRating = book.ratings.find(r => r.userId === userId);
+        if (existingRating) {
+            return res.status(400).json({ message: "Vous avez déjà noté ce livre." });
+        }
+
+        book.ratings.push({ userId, grade: rating });
+
+        const totalRatings = book.ratings.length;
+        const sumRatings = book.ratings.reduce((acc, r) => acc + r.grade, 0);
+        book.averageRating = sumRatings / totalRatings;
+
+        await book.save();
+
+        res.status(200).json(book);
+    } catch (error) {
+        res.status(500).json({ error });
+    }
+});
+
 module.exports = router;

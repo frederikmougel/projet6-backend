@@ -16,6 +16,19 @@ router.get("/", async (req, res, next) => {
         .catch(error => res.status(400).json({ error }));
 });
 
+/**
+ * Récupérer les 3 livres les mieux notés
+ */
+router.get("/bestrating", async (req, res) => {
+    try {
+        const bestBooks = await Book.find().sort({ averageRating: -1 }).limit(3);
+        console.log(bestBooks)
+        res.status(200).json(bestBooks);
+    } catch (error) {
+        res.status(400).json({ error });
+    }
+});
+
 /*
  * Récupere un livre via son ID
  */
@@ -53,7 +66,7 @@ router.put("/:id", auth, multer, async (req, res, next) => {
     Book.findOne({_id: req.params.id})
         .then((book) => {
             if (book.userId != req.auth.userId) {
-                res.status(401).json({ message : 'Not authorized'});
+                res.status(403).json({ message : 'Not authorized'});
             } else {
                 const filename = book.imageUrl.split('/images/')[1];
                 fs.unlink(`${path.resolve(__dirname, 'images')}/${filename}`, () => {
@@ -72,11 +85,11 @@ router.put("/:id", auth, multer, async (req, res, next) => {
 /*
  * Suppression d'un livre
  */
-router.delete("/:id", auth, multer, async (req, res, next) => {
+router.delete("/:id", auth, async (req, res, next) => {
     Book.findOne({_id: req.params.id})
         .then((book) => {
             if (book.userId != req.auth.userId) {
-                res.status(401).json({ message : 'Not authorized'});
+                res.status(403).json({ message : 'Not authorized'});
             } else {
                 const filename = book.imageUrl.split('/images/')[1];
                 fs.unlink(`${path.resolve(__dirname, 'images')}/${filename}`, () => {

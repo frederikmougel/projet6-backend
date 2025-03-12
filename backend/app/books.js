@@ -41,7 +41,7 @@ router.get("/:id", async (req, res, next) => {
 /*
  * Ajout d'un livre
  */
-router.post("/", auth, multer, async (req, res, next) => {
+router.post("/", auth, multer.upload, multer.optimizeImage, async (req, res, next) => {
     const book = JSON.parse(req.body.book);
     const newBook = new Book({
         ...book,
@@ -56,7 +56,7 @@ router.post("/", auth, multer, async (req, res, next) => {
 /*
  * Modification d'un livre
  */
-router.put("/:id", auth, multer, async (req, res, next) => {
+router.put("/:id", auth, multer.upload, multer.optimizeImage, async (req, res, next) => {
     const bookObject = req.file ? {
         ...JSON.parse(req.body.book),
         imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`

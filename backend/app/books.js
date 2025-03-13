@@ -22,7 +22,6 @@ router.get("/", async (req, res, next) => {
 router.get("/bestrating", async (req, res) => {
     try {
         const bestBooks = await Book.find().sort({ averageRating: -1 }).limit(3);
-        console.log(bestBooks)
         res.status(200).json(bestBooks);
     } catch (error) {
         res.status(400).json({ error });

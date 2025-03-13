@@ -19,5 +19,6 @@ Pour que le backend fonctionne correctement, vous devez créer un fichier `.env`
 5. **Ajoutez la configuration suivante dans `.env`**
    ```env
    MONGO_URI=XXXXXXX (votre string MongoDB avec votre identifiant et mot de passe)
+   JWT_TOKEN=XXXXXXX (votre clé secrète JWT)
    ```
 

@@ -28,15 +28,27 @@ const fileFilter = (req, file, callback) => {
   if (MIME_TYPES[file.mimetype]) {
     callback(null, true);
   } else {
-    callback(new Error('Format non autorisé (JPG, PNG, WEBP uniquement).'), false);
+    return callback(new multer.MulterError('LIMIT_UNEXPECTED_FILE', 'Format non autorisé (JPG, PNG, WEBP uniquement).'));
   }
 };
 
-const upload = multer({
-  storage,
-  limits: { fileSize: MAX_SIZE },
-  fileFilter
-}).single('image');
+const upload = (req, res, next) => {
+  const uploadHandler = multer({
+    storage,
+    limits: { fileSize: MAX_SIZE },
+    fileFilter
+  }).single('image');
+
+  uploadHandler(req, res, (err) => {
+    if (err) {
+      if (err instanceof multer.MulterError) {
+        return res.status(400).json({ error: err.message });
+      }
+      return res.status(500).json({ error: 'Erreur de téléchargement.' });
+    }
+    next();
+  });
+};
 
 // Optimisation après l’upload
 const optimizeImage = async (req, res, next) => {
@@ -60,7 +72,7 @@ const optimizeImage = async (req, res, next) => {
     next();
   } catch (error) {
     console.error("Erreur d'optimisation de l'image :", error);
-    res.status(500).json({ error: "Erreur lors du traitement de l'image." });
+    return res.status(500).json({ error: "Erreur lors du traitement de l'image." });
   }
 };
 
